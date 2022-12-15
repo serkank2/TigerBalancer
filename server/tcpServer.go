@@ -14,6 +14,9 @@ func TcpServer(config *Config) {
 	}
 	defer listener.Close()
 
+	var BackendList []BackendAddress = config.BackendAddress
+	fmt.Println(BackendList)
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
