@@ -1,18 +1,25 @@
 package server
 
+import (
+	"fmt"
+	"io"
+	"log"
+	"net"
+)
+
 type Config struct {
 	Name           string `yaml:"name"`
 	Network        string `yaml:"network"`
-	ListenAddress  string `yaml:"listenAddress"`
+	ListenAddress  net.IP `yaml:"listenAddress"`
 	ListenPort     int    `yaml:"listenPort"`
 	Ssl            bool   `yaml:"ssl"`
-	BackendAddress *BackendAddress
+	BackendAddress []BackendAddress
 }
 type BackendAddress struct {
-	Address          string `yaml:"address"`
+	Address          net.IP `yaml:"address"`
 	Port             int    `yaml:"port"`
 	NodeExporterPort int    `yaml:"nodeExporterPort"`
-	HealthCheck      *HealthCheck
+	HealthCheck      HealthCheck
 }
 type HealthCheck struct {
 	Path     string `yaml:"path"`
@@ -20,35 +27,35 @@ type HealthCheck struct {
 	Timeout  int    `yaml:"timeout"`
 }
 
-func (config *Config) Server() string {
+func (config *Config) Server() {
 
-	/*	listener, err := net.ListenTCP("tcp", &net.TCPAddr{IP: net.IP{127, 0, 0, 1}, Port: 8080})
+	listener, err := net.ListenTCP("tcp", &net.TCPAddr{IP: config.ListenAddress, Port: config.ListenPort})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer listener.Close()
+
+	for {
+		conn, err := listener.Accept()
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error accepting: %s", err.Error())
 		}
-		defer listener.Close()
+		backend := config.BackendAddress[chooseBackend()].Address.String() + ":" + fmt.Sprint(config.BackendAddress[chooseBackend()].Port)
 
-		for {
-			conn, err := listener.Accept()
+		go func() {
+			err := proxy(backend, conn)
 			if err != nil {
-				log.Printf("Error accepting: %s", err.Error())
+				log.Printf("Error proxying: %s", err.Error())
 			}
-			backend := chooseBackend()
-			go func() {
-				err := proxy(backend, conn)
-				if err != nil {
-					log.Printf("Error proxying: %s", err.Error())
-				}
-			}()
-		}*/
-	return config.Network
+		}()
+	}
+
 }
 
-func NewServer(config *Config) string {
-	return config.Server()
+func NewServer(config *Config) {
+	config.Server()
 }
 
-/*
 func proxy(backend string, c net.Conn) error {
 
 	bc, err := net.Dial("tcp", backend)
@@ -62,6 +69,6 @@ func proxy(backend string, c net.Conn) error {
 	return nil
 }
 
-func chooseBackend() string {
-	return server[0]
-}*/
+func chooseBackend() int {
+	return 0
+}

@@ -3,12 +3,12 @@ settings:
     name: "HttpLoadBalancer" # Name of the config
     network: "tcp" # tcp, udp, tcp4, tcp6, udp4, udp6
     listenAddress: "127.0.0.1" # IP address to listen on
-    listenPort: 80 # Port to listen on
+    listenPort: 9090 # Port to listen on
     ssl: false # Enable SSL
     backendAddress:
       -
         address: "127.0.0.1" # IP address of the backend server
-        port: 8080 # Port of the backend server
+        port: 8081 # Port of the backend server
         nodeExporterPort: 9100 # Port of the node exporter
         healthCheck:
           path: "/health" # Path to check for health
@@ -35,12 +35,12 @@ settings:
     name: "HttpsLoadBalancer" # Name of the config
     network: "tcp" # tcp, udp, tcp4, tcp6, udp4, udp6
     listenAddress: "127.0.0.1" # IP address to listen on
-    listenPort: 443 # Port to listen on
+    listenPort: 9091 # Port to listen on
     ssl: true # Enable SSL
     backendAddress:
       -
         address: "127.0.0.1" # IP address of the backend server
-        port: 443 # Port of the backend server
+        port: 8081 # Port of the backend server
         nodeExporterPort: 9100 # Port of the node exporter
         healthCheck:
           path: "/health" # Path to check for health

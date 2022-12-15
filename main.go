@@ -10,8 +10,9 @@ import (
 func main() {
 
 	config := loader.ConfigLoad()
-	for _, v := range config.Settings {
 
+	for _, v := range config.Settings {
+		fmt.Println(v.Name)
 		Status := true
 		ListenAddress := net.ParseIP(v.ListenAddress)
 
@@ -27,28 +28,35 @@ func main() {
 			Status = false
 		}
 
-		if Status {
-			fmt.Println("Check is OK")
+		var BackendAddressList []server.BackendAddress
+
+		for _, v := range v.BackendAddress {
+			BackendAddressList = append(BackendAddressList, server.BackendAddress{
+				Address:          net.ParseIP(v.Address),
+				Port:             v.Port,
+				NodeExporterPort: v.NodeExporterPort,
+				HealthCheck: server.HealthCheck{
+					Path:     v.HealthCheck.Path,
+					Interval: v.HealthCheck.Interval,
+					Timeout:  v.HealthCheck.Timeout,
+				},
+			})
+			if BackendAddressList == nil {
+				fmt.Println("BackendAddressList is not valid")
+			}
 		}
+		if Status {
+			go server.NewServer(&server.Config{
+				Name:           v.Name,
+				Network:        v.Network,
+				ListenAddress:  net.ParseIP(v.ListenAddress),
+				ListenPort:     v.ListenPort,
+				Ssl:            v.Ssl,
+				BackendAddress: BackendAddressList,
+			})
+		}
+	}
+	for {
 
 	}
-
-	app := server.NewServer(&server.Config{
-		Name:          "test",
-		Network:       "tcp",
-		ListenAddress: "192.168.1.1",
-		ListenPort:    8080,
-		Ssl:           false,
-		BackendAddress: &server.BackendAddress{
-			Address:          "192.168.1.1",
-			Port:             8080,
-			NodeExporterPort: 8080,
-			HealthCheck: &server.HealthCheck{
-				Path:     "/health",
-				Interval: 60,
-				Timeout:  30,
-			},
-		},
-	})
-	fmt.Println(app)
 }
