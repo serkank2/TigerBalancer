@@ -2,8 +2,6 @@ package server
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"net"
 )
 
@@ -27,48 +25,14 @@ type HealthCheck struct {
 	Timeout  int    `yaml:"timeout"`
 }
 
-func (config *Config) Server() {
-
-	listener, err := net.ListenTCP("tcp", &net.TCPAddr{IP: config.ListenAddress, Port: config.ListenPort})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer listener.Close()
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Printf("Error accepting: %s", err.Error())
-		}
-		backend := config.BackendAddress[chooseBackend()].Address.String() + ":" + fmt.Sprint(config.BackendAddress[chooseBackend()].Port)
-
-		go func() {
-			err := proxy(backend, conn)
-			if err != nil {
-				log.Printf("Error proxying: %s", err.Error())
-			}
-		}()
-	}
-
-}
-
 func NewServer(config *Config) {
-	config.Server()
-}
-
-func proxy(backend string, c net.Conn) error {
-
-	bc, err := net.Dial("tcp", backend)
-	if err != nil {
-		return fmt.Errorf("Error dialing backend: %s", err.Error())
+	switch config.Network {
+	case "tcp", "tcp4", "tcp6":
+		TcpServer(config)
+	case "udp", "udp4", "udp6":
+		fmt.Println("currently udp is not supported")
+	default:
+		panic("Unknown network type")
 	}
-	//c -> bc
-	go io.Copy(bc, c)
-	//bc -> c
-	go io.Copy(c, bc)
-	return nil
-}
 
-func chooseBackend() int {
-	return 0
 }
